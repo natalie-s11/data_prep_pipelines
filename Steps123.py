@@ -45,6 +45,7 @@ College.info()
 Job.info()
 
 # %%
+# College 
 # correct variable type/class as needed
 # change cohort size to fill na with 0 and convert to int
 College['cohort_size'] = College['cohort_size'].fillna(0).astype(int)
@@ -64,11 +65,25 @@ College['basic'] = College['basic'].astype('boolean')
 College['is_four_year'] = College['level'].apply(lambda x: True if x == 'four-year' else (False if x == 'two-year' else pd.NA))
 College['is_four_year'] = College['is_four_year'].astype('boolean')
 
+# See Changes
+College.dtypes
+
+# Job
+
+
+
+
 
 # %%
+# College
 # collapse factor levels as needed
 # I decided to not do this for College. I was considering it for basic but I do not know if certain research is 2 or 4 years so I chose to not collapse factor levels.
 
+
+# Job
+
+# %%
+# College
 # one-hot encoding factor variables
 # Change control to one-hot encode
 College = pd.get_dummies(
@@ -77,7 +92,13 @@ College = pd.get_dummies(
     prefix='control',      
     dummy_na=False         
 )
+print([col for col in College.columns if 'control' in col])
 
+
+# Job
+
+# %%
+# College
 # normalize the continuous variables
 # View the range of cohort size.
 MaxValue = College['cohort_size'].max()
@@ -92,33 +113,100 @@ College['cohort_size_scaled'] = scaler.fit_transform(College[['cohort_size']])
 MaxValue = College['student_count'].max()
 MinValue = College['student_count'].min()
 print(MaxValue-MinValue)
+
+# Job
+
+#%% 
+# College
 # Use the MinMaxScaler() to normalize 
 from sklearn.preprocessing import MinMaxScaler
 scaler = MinMaxScaler()
 College['student_count_scaled'] = scaler.fit_transform(College[['student_count']])
 
+# Job
+
+
+#%%
+# College
 # drop unneeded variables
 # Drop lots of variables
-College.drop(['long_x', 'lat_y', 'site', 'awards_per_value', 'awards_per_state_value', 'awards_per_natl_value', 'exp_award_value', 'exp_award_state_value', 'exp_award_natl_value', 'exp_award_percentile', 'ft_pct', 'fte_value', 'fte_percentile', 'vsa_grad_elsewhere_after6_first', 'vsa_enroll_after6_first', 'vsa_enroll_elsewhere_after6_first', 'vsa_grad_after4_transfer', 'vsa_grad_elsewhere_after4_transfer', 'vsa_enroll_after4_transfer', 'vsa_enroll_elsewhere_after4_transfer', 'vsa_grad_after6_transfer', 'vsa_grad_elsewhere_after6_transfer', 'vsa_enroll_after6_transfer', 'vsa_enroll_elsewhere_after6_transfer', 'similar', 'state_sector_ct', 'carnegie_ct', 'counted_pct', 'nicknames'], axis=1, inplace=True)
+College.drop(['long_x', 'lat_y', 'site', 'awards_per_value', 'awards_per_state_value', 'awards_per_natl_value', 'exp_award_value', 'exp_award_state_value', 'exp_award_natl_value', 'exp_award_percentile', 'ft_pct', 'fte_value', 'fte_percentile', 'vsa_grad_elsewhere_after6_first', 'vsa_enroll_after6_first', 'vsa_enroll_elsewhere_after6_first', 'vsa_grad_after4_transfer', 'vsa_grad_elsewhere_after4_transfer', 'vsa_enroll_after4_transfer', 'vsa_enroll_elsewhere_after4_transfer', 'vsa_grad_after6_transfer', 'vsa_grad_elsewhere_after6_transfer', 'vsa_enroll_after6_transfer', 'vsa_enroll_elsewhere_after6_transfer', 'similar', 'state_sector_ct', 'carnegie_ct', 'counted_pct', 'nicknames', 'vsa_year', 'vsa_grad_after4_first', 'vsa_grad_elsewhere_after4_first', 'vsa_enroll_after4_first', 'vsa_enroll_elsewhere_after4_first', 'vsa_grad_after6_first'], axis=1, inplace=True, errors='ignore')
+#Verify columns dropped
+College.columns
 
+
+# Job
+
+# %%
+# College
 # create target variable if needed
 # The target variable is the amount of people per state that go to private school.
-College['private_school'] = College['control_Private not-for-profit'] + College['control_Private for-profit']
+College['private_school'] = College['control_Private for-profit'] + College['control_Private not-for-profit']
 # Calculate private school students per college
 College['private_students'] = College['private_school'] * College['cohort_size']
 # Group by state and sum to get total private students per state
 private_by_state = College.groupby('state')['private_students'].sum().sort_values(ascending=False)
+print(private_by_state)
 
-print([col for col in College.columns if 'control' in col])
+# Job
+
+
 # %% 
+# college
 # Calculate the prevalence of the target variable
 # Question: Does the state you are from impact if you go to private school?
 # Calculate total students per state for percentage
 total_by_state = College.groupby('state')['cohort_size'].sum()
 pct_private_by_state = (private_by_state / total_by_state * 100).sort_values(ascending=False)
 # View results
-print(private_by_state)
 print(pct_private_by_state)
 
 
+# Job
+
+
+# %% 
+# College
 # Create the necessary data partitions (Train,Tune,Test)
+#  Separate training data from the rest for  
+train, test = train_test_split(
+    College,
+    train_size=0.55,                 
+    stratify=College['private_school'], 
+    random_state=42
+)
+# Verify the split sizes
+print(f"Training set shape: {train.shape}")
+print(f"Test set shape: {test.shape}")
+
+
+# Split remaining data into tuning and test sets
+tune, test = train_test_split(
+    test,
+    train_size=0.5,                  
+    stratify=test['private_school'],   
+    random_state=42
+)
+
+# Verify prevalence in training set
+print("Training set class distribution:")
+print(train['private_school'].value_counts())
+train_prev = train['private_school'].mean()
+print(f"Training prevalence: {train_prev:.2%}")
+
+# Verify prevalence in tuning set
+print("\nTuning set class distribution:")
+print(tune['private_school'].value_counts())
+tune_prev = tune['private_school'].mean()
+print(f"Tuning prevalence: {tune_prev:.2%}")
+
+# Verify prevalence in test set
+print("\nTest set class distribution:")
+print(test['private_school'].value_counts())
+test_prev = test['private_school'].mean()
+print(f"Test prevalence: {test_prev:.2%}")
+
+
+# Job
+
+# %%
