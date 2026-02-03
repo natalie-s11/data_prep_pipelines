@@ -51,10 +51,10 @@ Job.info()
 College['cohort_size'] = College['cohort_size'].fillna(0).astype(int)
 
 # Change HBCU column to boolean 
-College['hbcu'] = College['hbcu'].apply(lambda x: True if x == 1 else (False if x == 0 else pd.NA))
+College['hbcu'] = College['hbcu'].apply(lambda x: True if x == 1 else (False if x == 0 else False))
 
 # Change Flagship column to boolean 
-College['flagship'] = College['flagship'].apply(lambda x: True if x == 1 else (False if x == 0 else pd.NA))
+College['flagship'] = College['flagship'].apply(lambda x: True if x == 1 else (False if x == 0 else False))
 
 # Create categories for basic and change that column to them.
 basic_categories = ['associates', 'masters', 'baccalaureate', 'research', 'other']
@@ -69,10 +69,19 @@ College['is_four_year'] = College['is_four_year'].astype('boolean')
 College.dtypes
 
 # Job
-# Convert salary to integer
-Job
+# Convert salary to integer, fill na values with
+# Note, na values are probably for those not placed
+Job['salary'] = Job['salary'].fillna(0).astype(int)
+Job['degree_t']
 
+# Change degree_t to categories 
+hsc_s_categories = ['Commerce', 'Science', 'Arts']
+Job['hsc_s'] = Job['hsc_s'].apply(lambda x: True if x in hsc_s_categories else pd.NA)
+Job['hsc_s'] = Job['hsc_s'].astype('boolean')
 
+#Change workex to boolean
+Job['workex'] = Job['workex'].apply(lambda x: True if x == 'Yes' else (False if x == 'No' else pd.NA))
+Job['workex'] = Job['workex'].astype('boolean')
 
 
 # %%
@@ -80,8 +89,9 @@ Job
 # collapse factor levels as needed
 # I decided to not do this for College. I was considering it for basic but I do not know if certain research is 2 or 4 years so I chose to not collapse factor levels.
 
-
 # Job
+# I decided to not do this for Job because the dataset is smaller and mostly complete.
+
 
 # %%
 # College
@@ -97,7 +107,15 @@ print([col for col in College.columns if 'control' in col])
 
 
 # Job
+# Change degree_t to one-hot encode
+Job = pd.get_dummies(
+    Job,
+    columns=['degree_t'],
+    prefix='degree',
+    dummy_na=False
+)
 
+print([col for col in Job.columns if 'degree_' in col])
 # %%
 # College
 # normalize the continuous variables
@@ -114,17 +132,19 @@ College['cohort_size_scaled'] = scaler.fit_transform(College[['cohort_size']])
 MaxValue = College['student_count'].max()
 MinValue = College['student_count'].min()
 print(MaxValue-MinValue)
+from sklearn.preprocessing import MinMaxScaler
+scaler = MinMaxScaler()
+College['student_count'] = scaler.fit_transform(College[['student_count']])
 
 # Job
-
-#%% 
-# College
+#Change hsc_p to mix max scale
+MaxValue = Job['hsc_p'].max()
+MinValue = Job['hsc_p'].min()
+print(MaxValue-MinValue)
 # Use the MinMaxScaler() to normalize 
 from sklearn.preprocessing import MinMaxScaler
 scaler = MinMaxScaler()
-College['student_count_scaled'] = scaler.fit_transform(College[['student_count']])
-
-# Job
+Job['hsc_p'] = scaler.fit_transform(Job[['hsc_p']])
 
 
 #%%
@@ -137,6 +157,10 @@ College.columns
 
 
 # Job
+#I am going to drop the variables that do not relate to my question
+Job.drop(['sl_no', 'gender', 'ssc_p', 'ssc_b', 'hsc_b', 'hsc_p' 'degree_p', 'etest_p', 'mba_p'], axis=1, inplace=True, errors='ignore')
+#Verify columns dropped
+Job.columns
 
 # %%
 # College
