@@ -18,11 +18,15 @@ import requests  # For HTTP requests to download data
 # Review datasets 
 College = pd.read_csv("college_completion.csv")
 College.head() 
-# Question: Does where you are from impact where you go and if it is public or private school?
+# Question: Does the state you are from impact if you go to private school?
 
+
+# %%
 Job = pd.read_csv("job_placement.csv")
 Job.head()
 # Question: Does what you study and concentrate in determine your salary?
+
+
 # %%
 # Step 2: Work through the steps outlined in the examples to include the following elements:
 # Write a generic question that this dataset could address.
@@ -30,20 +34,91 @@ Job.head()
 # Question - Job: Does gender influence salary?
 
 # What is a independent Business Metric for your problem? Think about the case study examples we have discussed in class.
-# IMB College: Does attending an HBCU affect the likelihood of transferring?
+# IMB College: Does attending an HBCU affect the likelihood of what level of school you attend?
 # IMB Job: Does studying science and technology affect job placement?
 
 
 # %%
 # Data preparation:
+# View basic information of each dataset
+College.info()
+Job.info()
+
+# %%
 # correct variable type/class as needed
+# change cohort size to fill na with 0 and convert to int
+College['cohort_size'] = College['cohort_size'].fillna(0).astype(int)
+
+# Change HBCU column to boolean 
+College['hbcu'] = College['hbcu'].apply(lambda x: True if x == 1 else (False if x == 0 else pd.NA))
+
+# Change Flagship column to boolean 
+College['flagship'] = College['flagship'].apply(lambda x: True if x == 1 else (False if x == 0 else pd.NA))
+
+# Create categories for basic and change that column to them.
+basic_categories = ['associates', 'masters', 'baccalaureate', 'research', 'other']
+College['basic'] = College['basic'].apply(lambda x: True if x in basic_categories else pd.NA)
+College['basic'] = College['basic'].astype('boolean')
+
+# Change level to boolean
+College['is_four_year'] = College['level'].apply(lambda x: True if x == 'four-year' else (False if x == 'two-year' else pd.NA))
+College['is_four_year'] = College['is_four_year'].astype('boolean')
+
+
+# %%
 # collapse factor levels as needed
+# I decided to not do this for College. I was considering it for basic but I do not know if certain research is 2 or 4 years so I chose to not collapse factor levels.
+
 # one-hot encoding factor variables
+# Change control to one-hot encode
+College = pd.get_dummies(
+    College,
+    columns=['control'],   
+    prefix='control',      
+    dummy_na=False         
+)
+
 # normalize the continuous variables
+# View the range of cohort size.
+MaxValue = College['cohort_size'].max()
+MinValue = College['cohort_size'].min()
+print(MaxValue-MinValue)
+# Use the MinMaxScaler() to normalize 
+from sklearn.preprocessing import MinMaxScaler
+scaler = MinMaxScaler()
+College['cohort_size_scaled'] = scaler.fit_transform(College[['cohort_size']])
+
+# Do the same for student_count 
+MaxValue = College['student_count'].max()
+MinValue = College['student_count'].min()
+print(MaxValue-MinValue)
+# Use the MinMaxScaler() to normalize 
+from sklearn.preprocessing import MinMaxScaler
+scaler = MinMaxScaler()
+College['student_count_scaled'] = scaler.fit_transform(College[['student_count']])
+
 # drop unneeded variables
+# Drop lots of variables
+College.drop(['long_x', 'lat_y', 'site', 'awards_per_value', 'awards_per_state_value', 'awards_per_natl_value', 'exp_award_value', 'exp_award_state_value', 'exp_award_natl_value', 'exp_award_percentile', 'ft_pct', 'fte_value', 'fte_percentile', 'vsa_grad_elsewhere_after6_first', 'vsa_enroll_after6_first', 'vsa_enroll_elsewhere_after6_first', 'vsa_grad_after4_transfer', 'vsa_grad_elsewhere_after4_transfer', 'vsa_enroll_after4_transfer', 'vsa_enroll_elsewhere_after4_transfer', 'vsa_grad_after6_transfer', 'vsa_grad_elsewhere_after6_transfer', 'vsa_enroll_after6_transfer', 'vsa_enroll_elsewhere_after6_transfer', 'similar', 'state_sector_ct', 'carnegie_ct', 'counted_pct', 'nicknames'], axis=1, inplace=True)
+
 # create target variable if needed
+# The target variable is the amount of people per state that go to private school.
+College['private_school'] = College['control_Private not-for-profit'] + College['control_Private for-profit']
+# Calculate private school students per college
+College['private_students'] = College['private_school'] * College['cohort_size']
+# Group by state and sum to get total private students per state
+private_by_state = College.groupby('state')['private_students'].sum().sort_values(ascending=False)
 
-
+print([col for col in College.columns if 'control' in col])
 # %% 
 # Calculate the prevalence of the target variable
+# Question: Does the state you are from impact if you go to private school?
+# Calculate total students per state for percentage
+total_by_state = College.groupby('state')['cohort_size'].sum()
+pct_private_by_state = (private_by_state / total_by_state * 100).sort_values(ascending=False)
+# View results
+print(private_by_state)
+print(pct_private_by_state)
+
+
 # Create the necessary data partitions (Train,Tune,Test)
