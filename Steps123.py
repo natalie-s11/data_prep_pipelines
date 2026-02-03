@@ -235,3 +235,12 @@ print(f"Test prevalence: {test_prev:.2%}")
 # Job
 
 # %%
+# Step 3: What do your instincts tell you about the data. Can it address your problem, what areas/items are you worried about?
+# College
+# I think this dataset was a lot and had so many collumns that were worthless essentially. 
+# Overall, I think it can address my problem.
+# The only thing I am worried about if I messed up coding certain categories.
+# Job
+# This was a good dataset and was mostly full. 
+# It can address my problem
+# I am worried about if i categorized things correctly for the specilization.
