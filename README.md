@@ -14,7 +14,6 @@ Step one: Review these two datasets and brainstorm problems that could be addres
 
 Step two: Work through the steps outlined in the examples to include the following elements: 
 
-  * Write a generic question that this dataset could address.
   * What is a independent Business Metric for your problem? Think about the case study examples we have discussed in class.
   * Data preparation:  
     * correct variable type/class as needed
