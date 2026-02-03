@@ -29,10 +29,6 @@ Job.head()
 
 # %%
 # Step 2: Work through the steps outlined in the examples to include the following elements:
-# Write a generic question that this dataset could address.
-# Question - College: Does the type of college (2-year/4-year) influence what type of institution it is (public/private)?
-# Question - Job: Does gender influence salary?
-
 # What is a independent Business Metric for your problem? Think about the case study examples we have discussed in class.
 # IMB College: Does attending an HBCU affect the likelihood of what level of school you attend?
 # IMB Job: Does studying science and technology affect job placement?
