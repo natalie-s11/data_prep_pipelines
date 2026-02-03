@@ -112,16 +112,13 @@ Job = pd.get_dummies(
     prefix='degree',
     dummy_na=False
 )
-
-print([col for col in Job.columns if 'degree_' in col])
-
 # Change specialisation and degree_t to one-hot encode
 Job = pd.get_dummies(
     Job,
-    columns=['degree_t', 'specialisation'],
-    prefix=['degree', 'spec'],
+    columns=['specialisation'],
+    prefix=['spec'],
 )
-print([col for col in Job.columns if col.startswith('degree_') or col.startswith('spec_')])
+print([col for col in Job.columns if col.startswith('spec_')])
 
 # %%
 # College
@@ -166,7 +163,7 @@ College.columns
 # Job
 #I am going to drop the variables that do not relate to my question
 Job.drop(['sl_no', 'gender', 'ssc_p', 'ssc_b', 'hsc_b', 'hsc_p' 'degree_p', 'etest_p', 'mba_p'], axis=1, inplace=True, errors='ignore')
-#Drop the rows in salary where it is Nan.
+#Drop the rows in salary where it is Nan. This is because they are not placed so they do not have a salary since they do not have a job.
 Job = Job.dropna(subset=['salary'])
 
 #Verify columns dropped
