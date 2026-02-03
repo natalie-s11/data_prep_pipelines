@@ -74,15 +74,17 @@ College.dtypes
 Job['salary'] = Job['salary'].fillna(0).astype(int)
 Job['degree_t']
 
-# Change degree_t to categories 
-hsc_s_categories = ['Commerce', 'Science', 'Arts']
-Job['hsc_s'] = Job['hsc_s'].apply(lambda x: True if x in hsc_s_categories else pd.NA)
-Job['hsc_s'] = Job['hsc_s'].astype('boolean')
 
 #Change workex to boolean
 Job['workex'] = Job['workex'].apply(lambda x: True if x == 'Yes' else (False if x == 'No' else pd.NA))
 Job['workex'] = Job['workex'].astype('boolean')
 
+#Change status to boolean where placed = true and not-placed or nan = false
+Job['status'] = Job['status'].apply(lambda x: True if x == 'Yes' else (False if x == 'No' else pd.NA))
+Job['status'] = Job['status'].astype('boolean')
+
+# See Changes
+Job.dtypes
 
 # %%
 # College
@@ -116,6 +118,15 @@ Job = pd.get_dummies(
 )
 
 print([col for col in Job.columns if 'degree_' in col])
+
+# Change specialisation and degree_t to one-hot encode
+Job = pd.get_dummies(
+    Job,
+    columns=['degree_t', 'specialisation'],
+    prefix=['degree', 'spec'],
+)
+print([col for col in Job.columns if col.startswith('degree_') or col.startswith('spec_')])
+
 # %%
 # College
 # normalize the continuous variables
@@ -159,6 +170,9 @@ College.columns
 # Job
 #I am going to drop the variables that do not relate to my question
 Job.drop(['sl_no', 'gender', 'ssc_p', 'ssc_b', 'hsc_b', 'hsc_p' 'degree_p', 'etest_p', 'mba_p'], axis=1, inplace=True, errors='ignore')
+#Drop the rows in salary where it is Nan.
+Job = Job.dropna(subset=['salary'])
+
 #Verify columns dropped
 Job.columns
 
@@ -174,6 +188,8 @@ private_by_state = College.groupby('state')['private_students'].sum().sort_value
 print(private_by_state)
 
 # Job
+# Create a new variable where it groups together a count of degree_t and specialisation. Then divide salary into 3 groups: high, med, low and match the amount of degree_t and specialisation to the salary breakdown.
+
 
 
 # %% 
