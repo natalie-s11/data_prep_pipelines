@@ -1,5 +1,6 @@
-#%% 
-# Step 4: Create functions for your two pipelines that produces the train and test datasets.
+# %%
+# Step 4: Create functions for your two pipelines that produces the train
+# and test datasets.
 
 # %%
 # Imports
@@ -14,7 +15,7 @@ from io import StringIO  # For reading string data as file
 import requests  # For HTTP requests to download data
 
 
-# %% 
+# %%
 # Re-load datasets in
 College = pd.read_csv("college_completion.csv")
 Job = pd.read_csv("job_placement.csv")
@@ -25,45 +26,56 @@ Job = pd.read_csv("job_placement.csv")
 # Job - Does what you study and concentrate in determine your salary?
 
 
-#%% 
+# %%
 # Series of Functions for College
 
 def load_college(path):
     return pd.read_csv(path)
 
 # Change data types
+
+
 def clean_college_types(df):
     df['cohort_size'] = df['cohort_size'].fillna(0).astype(int)
     df['hbcu'] = df['hbcu'].apply(lambda x: True if x == 1 else False)
     df['flagship'] = df['flagship'].apply(lambda x: True if x == 1 else False)
     df['is_four_year'] = df['level'].apply(
-        lambda x: True if x == 'four-year' else (False if x == 'two-year' else pd.NA)
+        lambda x: True if x == 'four-year' else (
+            False if x == 'two-year' else pd.NA)
     ).astype('boolean')
     return df
 
 # One-hot encode
+
+
 def encode_college(df):
     df = pd.get_dummies(df, columns=['control'], prefix='control')
     return df
 
-# Scale 
+# Scale
+
+
 def scale_college(df):
     scaler = MinMaxScaler()
     df['cohort_size_scaled'] = scaler.fit_transform(df[['cohort_size']])
     df['student_count_scaled'] = scaler.fit_transform(df[['student_count']])
     return df
 
-# Drop columns 
+# Drop columns
+
+
 def drop_college_columns(df):
     df = df.drop([
-        'long_x','lat_y','site','awards_per_value','awards_per_state_value',
-        'awards_per_natl_value','exp_award_value','exp_award_state_value',
-        'exp_award_natl_value','exp_award_percentile','ft_pct','fte_value',
-        'fte_percentile','similar','nicknames'
+        'long_x', 'lat_y', 'site', 'awards_per_value', 'awards_per_state_value',
+        'awards_per_natl_value', 'exp_award_value', 'exp_award_state_value',
+        'exp_award_natl_value', 'exp_award_percentile', 'ft_pct', 'fte_value',
+        'fte_percentile', 'similar', 'nicknames'
     ], axis=1, errors='ignore')
     return df
 
 # Create target variable
+
+
 def create_college_target(df):
     df['private_school'] = (
         df['control_Private for-profit'] +
@@ -72,6 +84,8 @@ def create_college_target(df):
     return df
 
 # Train, tune, test split
+
+
 def split_college(df):
     train, temp = train_test_split(
         df,
@@ -88,6 +102,8 @@ def split_college(df):
     return train, tune, test
 
 # Put all the functions into one final function
+
+
 def college_pipeline(path):
     df = load_college(path)
     df = clean_college_types(df)
@@ -100,10 +116,11 @@ def college_pipeline(path):
 
 # %%
 # Run the College Pipeline
-college_train, college_tune, college_test = college_pipeline("college_completion.csv")
+college_train, college_tune, college_test = college_pipeline(
+    "college_completion.csv")
 
-#%% 
-#Confirm the splits for College
+# %%
+# Confirm the splits for College
 print("College splits:")
 print(college_train.shape, college_tune.shape, college_test.shape)
 
@@ -116,12 +133,16 @@ print(college_tune['private_school'].value_counts(normalize=True))
 print("\nCollege class distribution (test):")
 print(college_test['private_school'].value_counts(normalize=True))
 
-#%%
+# %%
 # Series of Functions for Job
+
+
 def load_job(path):
     return pd.read_csv(path)
 
 # Change data types
+
+
 def clean_job_types(df):
     df['salary'] = df['salary'].fillna(0).astype(int)
     df['workex'] = df['workex'].apply(lambda x: True if x == 'Yes' else False)
@@ -129,6 +150,8 @@ def clean_job_types(df):
     return df
 
 # One hot encode
+
+
 def encode_job(df):
     df = pd.get_dummies(df, columns=['degree_t'], prefix='degree')
     df = pd.get_dummies(df, columns=['specialisation'], prefix='spec')
@@ -136,18 +159,26 @@ def encode_job(df):
     return df
 
 # Scale
+
+
 def scale_job(df):
     scaler = MinMaxScaler()
     df['hsc_p_scaled'] = scaler.fit_transform(df[['hsc_p']])
     return df
 
 # Create target variable
+
+
 def create_job_target(df):
     df = df.dropna(subset=['salary'])
-    df['salary_group'] = pd.qcut(df['salary'], q=3, labels=['Low', 'Medium', 'High'])
+    df['salary_group'] = pd.qcut(
+        df['salary'], q=3, labels=[
+            'Low', 'Medium', 'High'])
     return df
 
 # Train, tune, test split
+
+
 def split_job(df):
     train, temp = train_test_split(
         df,
@@ -164,6 +195,8 @@ def split_job(df):
     return train, tune, test
 
 # Put all the functions into one final function
+
+
 def job_pipeline(path):
     df = load_job(path)
     df = clean_job_types(df)
@@ -178,7 +211,7 @@ def job_pipeline(path):
 job_train, job_tune, job_test = job_pipeline("job_placement.csv")
 
 
-#%% 
+# %%
 # Confirm the splits for Job
 print("\nJob splits:")
 print(job_train.shape, job_tune.shape, job_test.shape)
@@ -193,7 +226,6 @@ print("\nJob salary group distribution (test):")
 print(job_test['salary_group'].value_counts(normalize=True))
 
 
-
 # %%
 # College Pipelines as one long function
 # Define pipeline functions for College
@@ -204,20 +236,25 @@ def prep_college_pipeline(college_path):
     # Change data types
     College['cohort_size'] = College['cohort_size'].fillna(0).astype(int)
 
-    College['hbcu'] = College['hbcu'].apply(lambda x: True if x == 1 else False)
-    College['flagship'] = College['flagship'].apply(lambda x: True if x == 1 else False)
+    College['hbcu'] = College['hbcu'].apply(
+        lambda x: True if x == 1 else False)
+    College['flagship'] = College['flagship'].apply(
+        lambda x: True if x == 1 else False)
 
     College['is_four_year'] = College['level'].apply(
-        lambda x: True if x == 'four-year' else (False if x == 'two-year' else pd.NA)
+        lambda x: True if x == 'four-year' else (
+            False if x == 'two-year' else pd.NA)
     ).astype('boolean')
 
-    # One-hot encode 
+    # One-hot encode
     College = pd.get_dummies(College, columns=['control'], prefix='control')
 
-    # Scaling 
+    # Scaling
     scaler = MinMaxScaler()
-    College['cohort_size_scaled'] = scaler.fit_transform(College[['cohort_size']])
-    College['student_count_scaled'] = scaler.fit_transform(College[['student_count']])
+    College['cohort_size_scaled'] = scaler.fit_transform(
+        College[['cohort_size']])
+    College['student_count_scaled'] = scaler.fit_transform(
+        College[['student_count']])
 
     # Drop columns
     College.drop([
@@ -271,10 +308,12 @@ def prep_job_pipeline(job_path):
     # Change data types
     Job['salary'] = Job['salary'].fillna(0).astype(int)
 
-    Job['workex'] = Job['workex'].apply(lambda x: True if x == 'Yes' else False).astype('boolean')
-    Job['status'] = Job['status'].apply(lambda x: True if x == 'Yes' else False).astype('boolean')
+    Job['workex'] = Job['workex'].apply(
+        lambda x: True if x == 'Yes' else False).astype('boolean')
+    Job['status'] = Job['status'].apply(
+        lambda x: True if x == 'Yes' else False).astype('boolean')
 
-    # One-hot encode 
+    # One-hot encode
     Job = pd.get_dummies(Job, columns=['degree_t'], prefix='degree')
     Job = pd.get_dummies(Job, columns=['specialisation'], prefix='spec')
 
@@ -295,9 +334,11 @@ def prep_job_pipeline(job_path):
     Job = Job.dropna(subset=['salary'])
 
     # Define the target variable
-    Job['salary_group'] = pd.qcut(Job['salary'], q=3, labels=['Low', 'Medium', 'High'])
+    Job['salary_group'] = pd.qcut(
+        Job['salary'], q=3, labels=[
+            'Low', 'Medium', 'High'])
 
-    # Train / Tune / Test Split 
+    # Train / Tune / Test Split
     train, temp = train_test_split(
         Job,
         train_size=0.55,
@@ -316,18 +357,18 @@ def prep_job_pipeline(job_path):
     return train, tune, test
 
 
-
-#%%
+# %%
 # Run College pipeline
-college_train, college_tune, college_test = prep_college_pipeline("college_completion.csv")
+college_train, college_tune, college_test = prep_college_pipeline(
+    "college_completion.csv")
 
 
-#%%
+# %%
 # Run Job pipeline
 job_train, job_tune, job_test = prep_job_pipeline("job_placement.csv")
 
 
-#%%
+# %%
 # Confirm the splits based on the question initially asked
 print("College splits:")
 print(college_train.shape, college_tune.shape, college_test.shape)
