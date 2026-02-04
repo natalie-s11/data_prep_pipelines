@@ -112,6 +112,8 @@ Job = pd.get_dummies(
     prefix='degree',
     dummy_na=False
 )
+print([col for col in Job.columns if col.startswith('degree')])
+
 # Change specialisation and degree_t to one-hot encode
 Job = pd.get_dummies(
     Job,
@@ -119,6 +121,9 @@ Job = pd.get_dummies(
     prefix=['spec'],
 )
 print([col for col in Job.columns if col.startswith('spec_')])
+
+# Rename 'degree_p' column to avoid confusing with what I just one-hot encoded
+Job = Job.rename(columns={'degree_p': 'degree_pct'})
 
 # %%
 # College
@@ -181,8 +186,25 @@ private_by_state = College.groupby('state')['private_students'].sum().sort_value
 print(private_by_state)
 
 # Job
-# Create a new variable where it groups together a count of degree_t and specialisation. Then divide salary into 3 groups: high, med, low and match the amount of degree_t and specialisation to the salary breakdown.
-
+# Split salary into 3 groups: high, medium, and low
+Job['salary_group'] = pd.qcut(Job['salary'], q=3, labels=['Low', 'Medium', 'High'])
+# Then, see how concentrations and majors distribute across the salary groups I just created 
+major_counts = (
+    Job
+    .groupby(['salary_group'])[
+        ['degree_Comm&Mgmt', 'degree_Others', 'degree_Sci&Tech']
+    ]
+    .sum()
+)
+spec_counts = (
+    Job
+    .groupby(['salary_group'])[
+        ['spec_Mkt&HR', 'spec_Mkt&Fin']
+    ]
+    .sum()
+)
+print("Majors by salary group:\n", major_counts)
+print("\nSpecialisations by salary group:\n", spec_counts)
 
 
 # %% 
@@ -197,6 +219,19 @@ print(pct_private_by_state)
 
 
 # Job
+# Calculate which major and concentration are the most common in the high salary group
+high_salary = Job[Job['salary_group'] == 'High']
+
+major_prevalence_high = high_salary[
+    ['degree_Comm&Mgmt', 'degree_Others', 'degree_Sci&Tech']
+].mean().sort_values(ascending=False)
+
+spec_prevalence_high = high_salary[
+    ['spec_Mkt&HR', 'spec_Mkt&Fin']
+].mean().sort_values(ascending=False)
+
+print("Major prevalence in High salary group:\n", major_prevalence_high)
+print("\nSpecialisation prevalence in High salary group:\n", spec_prevalence_high)
 
 
 # %% 
@@ -242,6 +277,26 @@ print(f"Test prevalence: {test_prev:.2%}")
 
 
 # Job
+# Split the data for train, tune, and test for Job
+from sklearn.model_selection import train_test_split
+
+train, temp = train_test_split(
+    Job,
+    train_size=0.55,
+    stratify=Job['salary_group'],
+    random_state=42
+)
+
+tune, test = train_test_split(
+    temp,
+    train_size=0.5,
+    stratify=temp['salary_group'],
+    random_state=42
+)
+
+print("Train distribution:\n", train['salary_group'].value_counts(normalize=True))
+print("\nTune distribution:\n", tune['salary_group'].value_counts(normalize=True))
+print("\nTest distribution:\n", test['salary_group'].value_counts(normalize=True))
 
 # %%
 # Step 3: What do your instincts tell you about the data. Can it address your problem, what areas/items are you worried about?
