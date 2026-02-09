@@ -20,7 +20,7 @@ import requests  # For HTTP requests to download data
 # Review datasets
 College = pd.read_csv("college_completion.csv")
 College.head()
-# Question: Does the state you are from impact if you go to private school?
+# Question: Does the state where a college is deremine if it is private or public? 
 
 
 # %%
@@ -283,7 +283,7 @@ print("\nSpecialisations by salary group:\n", spec_counts)
 # %%
 # college
 # Calculate the prevalence of the target variable
-# Question: Does the state you are from impact if you go to private school?
+# Question: Does the state where a college is deremine if it is private or public? 
 # Calculate total students per state for percentage
 total_by_state = College.groupby('state')['cohort_size'].sum()
 pct_private_by_state = (
